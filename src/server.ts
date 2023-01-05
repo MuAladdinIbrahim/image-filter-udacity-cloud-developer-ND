@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
@@ -32,19 +32,19 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
     //! END @TODO1
 
 // test it in browser: url/filteredimage?image_url=https://images.pexels.com/photos/775201/pexels-photo-775201.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1
-  app.get( "/filteredimage", async ( req, res ) => {
+  app.get( "/filteredimage", async ( req: Request, res: Response, next: NextFunction ) => {
     try {
-      const imageURL = req.query.image_url
+      const imageURL: string = req.query.image_url
       if(!imageURL) res.status(400).send({error: 'image_url query is missing'})
-      const imageFile = await filterImageFromURL(imageURL)
+      const imageFile: string = await filterImageFromURL(imageURL)
       res.sendFile(imageFile, () => {
         deleteLocalFiles([imageFile])
       })
     } catch (error: any) {
       if(error.message.includes('no such file')) {
-        res.status(404).send({ error: error.message })
+        res.status(422).send({ error: error.message })
       }
-      throw error
+      next(error)
     }
   } );
 
